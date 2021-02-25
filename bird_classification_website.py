@@ -4,8 +4,15 @@ from torchvision import transforms
 from PIL import Image
 import json
 import numpy as np
+import boto3
+from io import BytesIO
+import time
 
-def predict(img):
+@st.cache()
+def predict(img, index_to_label_dict, device='cpu'):
+    #transforming input image according to ImageNet paper
+    #The ResNet was initially trained on ImageNet dataset
+    #Need to transform it like they did
     transform = transforms.Compose([
         transforms.Resize(256),
         transforms.CenterCrop(224),
@@ -17,38 +24,65 @@ def predict(img):
     ])
 
     img_t = transform(img)
-    batch_t = torch.unsqueeze(img_t, 0)
+    img_t = torch.unsqueeze(img_t, 0)
+    img_t = img_t.to(device)
 
-    model.eval()
-    out = model(batch_t)
-    _, index_out = torch.max(out, 1)
-    index = index_out.item()
-    label = index_to_label_dict[index]
-    return label.title()
+    model.eval() #putting model in eval mode
+    output_tensor = model(img_t) #predicting
+    prob_tensor = torch.nn.Softmax(dim=1)(output_tensor)
+    top_3 = torch.topk(prob_tensor, 3, dim=1)
+    probabilites = top_3.values.detach().numpy().flatten()
+    indices = top_3.indices.detach().numpy().flatten()
+    out = []
+    for pred_prob, pred_idx in zip(probabilites, indices):
+        predicted_label = index_to_label_dict[pred_idx].title()
+        predicted_prob = pred_prob * 100
+        out.append((predicted_label, f"{predicted_prob:.3f}%"))
+    return out
 
-with open('../downloads/model/class_label_to_prediction_index.json', 'rb') as f:
-    label_to_index_dict = json.load(f)
+@st.cache()
+def load_model(path='trained_model_resnet50.pt', device='cpu'):
+    return torch.load(path, map_location=device)
 
-index_to_label_dict = {v: k for k, v in label_to_index_dict.items()}
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-model = torch.load('../downloads/trained_model_resnet50.pt', map_location=device)
+@st.cache()
+def load_index_to_label_dict(path='index_to_class_label.json'):
+    with open(path, 'r') as f:
+        index_to_class_label_dict = json.load(f) #loads keys in as strings, need to convert to ints
+    index_to_class_label_dict = {int(k): v for k, v in index_to_class_label_dict.items()}
+    return index_to_class_label_dict
+
+# with open('index_to_class_label.json', 'r') as f:
+#     index_to_class_label_dict = json.load(f)
+
+# index_to_class_label_dict = {int(k): v for k, v in index_to_class_label_dict.items()}
+# device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+model = load_model()
+index_to_class_label_dict = load_index_to_label_dict()
+
+# image_choices = {
+#     'Bald Eagle': '../downloads/model/Petrusich-Dont-Mess-with-the-Birds.jpg',
+#     'African Crowned Crane': '../downloads/model/001.jpg'
+# }
 
 image_choices = {
-    'Bald Eagle': '../downloads/model/Petrusich-Dont-Mess-with-the-Birds.jpg',
-    'African Crowned Crane': '../downloads/model/001.jpg'
+    'Albatross': 'train/ALBATROSS/001.jpg',
+    'Blue Grouse': 'train/BLUE GROUSE/001.jpg'
 }
 
-choice = st.sidebar.selectbox('Select example bird: ', list(image_choices.keys()))
 # img = Image.open(image_choices[choice])
 # img = Image.open('../downloads/model/Petrusich-Dont-Mess-with-the-Birds.jpg')
-
 file = st.file_uploader('Upload image')
 if not file:
-    img = Image.open(image_choices[choice])
+    choice = st.sidebar.selectbox('Select example bird: ', list(image_choices.keys()))
+    s3 = boto3.client('s3')
+    s3_file = s3.get_object(Bucket='bird-classification-bucket', Key=image_choices[choice])['Body'].read()
+    img = Image.open(BytesIO(s3_file))
 
 else:
     img = Image.open(file)
 
-prediction = predict(img)
+prediction = predict(img, index_to_class_label_dict)
 st.image(img)
-st.write(prediction)
+displayed_prediction = str()
+for idx, p in enumerate(prediction, start=1):
+    st.write(f"Top {idx} prediction: {p[0]}, Confidence level: {p[1]}")
