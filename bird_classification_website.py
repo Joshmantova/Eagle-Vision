@@ -51,31 +51,28 @@ def load_index_to_label_dict(path='index_to_class_label.json'):
     index_to_class_label_dict = {int(k): v for k, v in index_to_class_label_dict.items()}
     return index_to_class_label_dict
 
-# with open('index_to_class_label.json', 'r') as f:
-#     index_to_class_label_dict = json.load(f)
+@st.cache()
+def load_file_from_s3(key, bucket_name='bird-classification-bucket'):
+    s3 = boto3.client('s3')
+    s3_file_raw = s3.get_object(Bucket=bucket_name,
+                            Key=key)
+    s3_file = s3_file_raw['Body'].read()
+    return s3_file
 
-# index_to_class_label_dict = {int(k): v for k, v in index_to_class_label_dict.items()}
-# device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 model = load_model()
 index_to_class_label_dict = load_index_to_label_dict()
-
-# image_choices = {
-#     'Bald Eagle': '../downloads/model/Petrusich-Dont-Mess-with-the-Birds.jpg',
-#     'African Crowned Crane': '../downloads/model/001.jpg'
-# }
 
 image_choices = {
     'Albatross': 'train/ALBATROSS/001.jpg',
     'Blue Grouse': 'train/BLUE GROUSE/001.jpg'
 }
 
-# img = Image.open(image_choices[choice])
-# img = Image.open('../downloads/model/Petrusich-Dont-Mess-with-the-Birds.jpg')
 file = st.file_uploader('Upload image')
 if not file:
     choice = st.sidebar.selectbox('Select example bird: ', list(image_choices.keys()))
-    s3 = boto3.client('s3')
-    s3_file = s3.get_object(Bucket='bird-classification-bucket', Key=image_choices[choice])['Body'].read()
+    # s3 = boto3.client('s3')
+    # s3_file = s3.get_object(Bucket='bird-classification-bucket', Key=image_choices[choice])['Body'].read()
+    s3_file = load_file_from_s3(key=image_choices[choice])
     img = Image.open(BytesIO(s3_file))
 
 else:
