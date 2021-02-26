@@ -5,6 +5,8 @@ from PIL import Image
 import json
 import numpy as np
 import boto3
+from botocore import UNSIGNED
+from botocore.client import Config
 from io import BytesIO
 
 @st.cache()
@@ -52,7 +54,7 @@ def load_index_to_label_dict(path='index_to_class_label.json'):
 
 @st.cache()
 def load_file_from_s3(key, bucket_name='bird-classification-bucket'):
-    s3 = boto3.client('s3')
+    s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
     s3_file_raw = s3.get_object(Bucket=bucket_name,
                             Key=key)
     s3_file = s3_file_raw['Body'].read()
