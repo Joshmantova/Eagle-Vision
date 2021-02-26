@@ -1,6 +1,5 @@
-FROM python:3.7
+FROM python:3.8
 
-COPY ./requirements.txt /app/requirements.txt
 COPY . /app
 
 WORKDIR /app
@@ -9,4 +8,5 @@ RUN pip install -r requirements.txt
 
 EXPOSE 8501
 
-CMD streamlit run bird_classification_website.py
+ENTRYPOINT ["streamlit", "run"]
+CMD ["bird_classification_website.py"]
