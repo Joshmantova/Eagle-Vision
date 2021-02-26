@@ -1,16 +1,18 @@
-import streamlit as st
-import torch
-from torchvision import transforms
-from PIL import Image
 import json
-import numpy as np
+from io import BytesIO
+from PIL import Image
+
 import boto3
 from botocore import UNSIGNED
 from botocore.client import Config
-from io import BytesIO
+
+import torch
+from torchvision import transforms
+
+import streamlit as st
 
 @st.cache()
-def predict(img, index_to_label_dict, device='cpu'):
+def predict(img, index_to_label_dict, model, device='cpu'):
     #transforming input image according to ImageNet paper
     #The ResNet was initially trained on ImageNet dataset
     #Need to transform it like they did
@@ -34,15 +36,15 @@ def predict(img, index_to_label_dict, device='cpu'):
     top_3 = torch.topk(prob_tensor, 3, dim=1)
     probabilites = top_3.values.detach().numpy().flatten()
     indices = top_3.indices.detach().numpy().flatten()
-    out = []
+    formatted_predictions = []
     for pred_prob, pred_idx in zip(probabilites, indices):
         predicted_label = index_to_label_dict[pred_idx].title()
         predicted_prob = pred_prob * 100
-        out.append((predicted_label, f"{predicted_prob:.3f}%"))
-    return out
+        formatted_predictions.append((predicted_label, f"{predicted_prob:.3f}%"))
+    return formatted_predictions
 
 @st.cache()
-def load_model(path='trained_model_resnet50.pt', device='cpu'):
+def load_model(path='../models/trained_model_resnet50.pt', device='cpu'):
     return torch.load(path, map_location=device)
 
 @st.cache()
@@ -70,17 +72,19 @@ if __name__ == '__main__':
     index_to_class_label_dict = load_index_to_label_dict()
     all_image_files = load_all_image_files()
     types_of_birds = sorted(list(all_image_files['test'].keys()))
+    dataset_type_options = ["All Images", "Images Used To Train The Model",
+                            "Images Used To Tune The Model", "Images The Model Has Never Seen"]
 
-    file = st.file_uploader('Upload image')
+    file = st.file_uploader('Upload An Image')
     if not file:
-        dataset_type = st.sidebar.selectbox("Data Portion Type", ["All", "Train", "Validation", "Test"])
-        if dataset_type == 'All':
+        dataset_type = st.sidebar.selectbox("Data Portion Type", dataset_type_options)
+        if dataset_type == 'All Images':
             dataset_type = "consolidated"
-        elif dataset_type == 'Validation':
+        elif dataset_type == 'Images Used To Tune The Model':
             dataset_type = 'valid'
-        elif dataset_type == 'Test':
+        elif dataset_type == 'Images The Model Has Never Seen':
             dataset_type = 'test'
-        elif dataset_type == 'Train':
+        elif dataset_type == 'Images Used To Train The Model':
             dataset_type = 'train'
 
         bird_species = st.sidebar.selectbox("Bird Type", types_of_birds)
@@ -96,8 +100,7 @@ if __name__ == '__main__':
     else:
         img = Image.open(file)
 
-    prediction = predict(img, index_to_class_label_dict)
+    prediction = predict(img, index_to_class_label_dict, model)
     st.image(img)
-    displayed_prediction = str()
     for idx, p in enumerate(prediction, start=1):
         st.write(f"Top {idx} prediction: {p[0]}, Confidence level: {p[1]}")
