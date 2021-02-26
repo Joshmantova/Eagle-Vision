@@ -6,8 +6,6 @@ import json
 import numpy as np
 import boto3
 from io import BytesIO
-import time
-import pickle
 
 @st.cache()
 def predict(img, index_to_label_dict, device='cpu'):
@@ -59,11 +57,6 @@ def load_file_from_s3(key, bucket_name='bird-classification-bucket'):
                             Key=key)
     s3_file = s3_file_raw['Body'].read()
     return s3_file
-
-# @st.cache()
-# def load_types_of_birds(path='types_of_birds.pkl'):
-#     with open(path, 'rb') as f:
-#         return pickle.load(f)
 
 @st.cache()
 def load_all_image_files(path='all_image_files.json'):
