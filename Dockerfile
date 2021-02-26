@@ -4,7 +4,6 @@ COPY . /app
 
 WORKDIR /app
 
-RUN pip install --upgrade pip
 #We need to install torch CPU version because we're just serving the application and the CPU version is much smaller
 #Installing it separately because we need to install it from a specific location
 RUN pip install torch==1.7.1+cpu torchvision==0.8.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
