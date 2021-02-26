@@ -54,9 +54,7 @@ def load_index_to_label_dict(path='index_to_class_label.json'):
 
 @st.cache()
 def load_file_from_s3(key, bucket_name='bird-classification-bucket'):
-    s3 = boto3.client('s3',
-                    aws_access_key_id='AKIA2EIMAUEUL4S73LXT',
-                    aws_secret_access_key="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")
+    s3 = boto3.client('s3')
     s3_file_raw = s3.get_object(Bucket=bucket_name,
                             Key=key)
     s3_file = s3_file_raw['Body'].read()
@@ -78,11 +76,6 @@ if __name__ == '__main__':
     all_image_files = load_all_image_files()
     types_of_birds = sorted(list(all_image_files['test'].keys()))
 
-    image_choices = {
-        'Albatross': 'train/ALBATROSS/001.jpg',
-        'Blue Grouse': 'train/BLUE GROUSE/001.jpg'
-    }
-
     file = st.file_uploader('Upload image')
     if not file:
         dataset_type = st.sidebar.selectbox("Data Portion Type", ["All", "Train", "Validation", "Test"])
@@ -92,6 +85,9 @@ if __name__ == '__main__':
             dataset_type = 'valid'
         elif dataset_type == 'Test':
             dataset_type = 'test'
+        elif dataset_type == 'Train':
+            dataset_type = 'train'
+
         bird_species = st.sidebar.selectbox("Bird Type", types_of_birds)
         image_name_list = all_image_files[dataset_type][bird_species]
         image_name = st.sidebar.selectbox("Image Name", image_name_list)
