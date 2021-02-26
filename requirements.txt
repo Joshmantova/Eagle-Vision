@@ -1,6 +1,7 @@
 numpy==1.20.0
+Cython==0.29.22
+pyarrow==3.0.0
 streamlit==0.76.0
 boto3==1.17.3
-torchvision==0.8.2
-torch==1.7.1
+http://download.pytorch.org/whl/cpu/torch-1.7.1%2Bcpu-cp37-cp37m-linux_x86_64.whl
 Pillow==8.1.0
