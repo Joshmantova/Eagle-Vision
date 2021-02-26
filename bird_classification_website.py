@@ -7,6 +7,7 @@ import numpy as np
 import boto3
 from io import BytesIO
 import time
+import pickle
 
 @st.cache()
 def predict(img, index_to_label_dict, device='cpu'):
@@ -53,33 +54,59 @@ def load_index_to_label_dict(path='index_to_class_label.json'):
 
 @st.cache()
 def load_file_from_s3(key, bucket_name='bird-classification-bucket'):
-    s3 = boto3.client('s3')
+    s3 = boto3.client('s3',
+                    aws_access_key_id='AKIA2EIMAUEUL4S73LXT',
+                    aws_secret_access_key="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")
     s3_file_raw = s3.get_object(Bucket=bucket_name,
                             Key=key)
     s3_file = s3_file_raw['Body'].read()
     return s3_file
 
-model = load_model()
-index_to_class_label_dict = load_index_to_label_dict()
+# @st.cache()
+# def load_types_of_birds(path='types_of_birds.pkl'):
+#     with open(path, 'rb') as f:
+#         return pickle.load(f)
 
-image_choices = {
-    'Albatross': 'train/ALBATROSS/001.jpg',
-    'Blue Grouse': 'train/BLUE GROUSE/001.jpg'
-}
+@st.cache()
+def load_all_image_files(path='all_image_files.json'):
+    with open(path, 'r') as f:
+        return json.load(f)
 
-file = st.file_uploader('Upload image')
-if not file:
-    choice = st.sidebar.selectbox('Select example bird: ', list(image_choices.keys()))
-    # s3 = boto3.client('s3')
-    # s3_file = s3.get_object(Bucket='bird-classification-bucket', Key=image_choices[choice])['Body'].read()
-    s3_file = load_file_from_s3(key=image_choices[choice])
-    img = Image.open(BytesIO(s3_file))
+if __name__ == '__main__':
+    model = load_model()
+    index_to_class_label_dict = load_index_to_label_dict()
+    all_image_files = load_all_image_files()
+    types_of_birds = sorted(list(all_image_files['test'].keys()))
 
-else:
-    img = Image.open(file)
+    image_choices = {
+        'Albatross': 'train/ALBATROSS/001.jpg',
+        'Blue Grouse': 'train/BLUE GROUSE/001.jpg'
+    }
 
-prediction = predict(img, index_to_class_label_dict)
-st.image(img)
-displayed_prediction = str()
-for idx, p in enumerate(prediction, start=1):
-    st.write(f"Top {idx} prediction: {p[0]}, Confidence level: {p[1]}")
+    file = st.file_uploader('Upload image')
+    if not file:
+        dataset_type = st.sidebar.selectbox("Data Portion Type", ["All", "Train", "Validation", "Test"])
+        if dataset_type == 'All':
+            dataset_type = "consolidated"
+        elif dataset_type == 'Validation':
+            dataset_type = 'valid'
+        elif dataset_type == 'Test':
+            dataset_type = 'test'
+        bird_species = st.sidebar.selectbox("Bird Type", types_of_birds)
+        image_name_list = all_image_files[dataset_type][bird_species]
+        image_name = st.sidebar.selectbox("Image Name", image_name_list)
+        if dataset_type == 'consolidated':
+            s3_key_prefix = 'consolidated/consolidated'
+        else:
+            s3_key_prefix = dataset_type
+        s3_file = load_file_from_s3(key=s3_key_prefix + '/' + bird_species + '/' + image_name)
+        img = Image.open(BytesIO(s3_file))
+
+    else:
+        img = Image.open(file)
+
+    prediction = predict(img, index_to_class_label_dict)
+    st.image(img)
+    displayed_prediction = str()
+    for idx, p in enumerate(prediction, start=1):
+        st.write(f"Top {idx} prediction: {p[0]}, Confidence level: {p[1]}")
