@@ -2,4 +2,4 @@
 Bird classification project
 
 
-## Readme still in construction
+https://bit.ly/3bK1WHU
