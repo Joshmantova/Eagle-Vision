@@ -1,6 +1,7 @@
 import json #to work with my json files
 from io import BytesIO #to convert the s3 images to play nice with PIL
 from PIL import Image #to work with images
+import os
 
 import boto3 #s3 interactions
 from botocore import UNSIGNED #contact public s3 buckets anonymously
@@ -73,41 +74,42 @@ def load_all_image_files(path='all_image_files.json'):
     with open(path, 'r') as f:
         return json.load(f)
 
+@st.cache()
+def load_list_of_images_available(all_image_files, image_files_dtype, bird_species):
+    #retrieves list of available images given the current selections
+    species_dict = all_image_files.get(image_files_dtype)
+    list_of_files = species_dict.get(bird_species)
+    return list_of_files
+
 if __name__ == '__main__':
     model = load_model()
     index_to_class_label_dict = load_index_to_label_dict()
     all_image_files = load_all_image_files()
     types_of_birds = sorted(list(all_image_files['test'].keys())) #alphabetically sorting all the species
-    # dataset_type_options = ["All Images", "Images Used To Train The Model",
-    #                         "Images Used To Tune The Model", "Images The Model Has Never Seen"]
 
     file = st.file_uploader('Upload An Image')
     dtype_file_structure_mapping = {
         'All Images': 'consolidated', 'Images Used To Train The Model': 'train', 
         'Images Used To Tune The Model': 'valid', 'Images The Model Has Never Seen': 'test'
-        }
+        } #Needed to map the interpretable displayed option to split type in order to index available images
+
     if not file: #if there's no file uploaded, display preset images to choose from
         dataset_type = st.sidebar.selectbox("Data Portion Type", list(dtype_file_structure_mapping.keys()))
-        # if dataset_type == 'All Images':
-        #     dataset_type = "consolidated"
-        # elif dataset_type == 'Images Used To Tune The Model':
-        #     dataset_type = 'valid'
-        # elif dataset_type == 'Images The Model Has Never Seen':
-        #     dataset_type = 'test'
-        # elif dataset_type == 'Images Used To Train The Model':
-        #     dataset_type = 'train'
+        #getting the split type from user selection to index list of available images
         image_files_dtype = dtype_file_structure_mapping[dataset_type]
 
         bird_species = st.sidebar.selectbox("Bird Type", types_of_birds)
-        image_name_list = all_image_files[image_files_dtype][bird_species]
-        image_name = st.sidebar.selectbox("Image Name", image_name_list)
+        available_images = load_list_of_images_available(all_image_files, image_files_dtype, bird_species)
+        image_name = st.sidebar.selectbox("Image Name", available_images)
         #S3 file structure is a little strange so this is necessary
         #consolidated has a nested and redundant folder
         if image_files_dtype == 'consolidated':
             s3_key_prefix = 'consolidated/consolidated'
         else:
             s3_key_prefix = image_files_dtype
-        s3_file = load_file_from_s3(key=s3_key_prefix + '/' + bird_species + '/' + image_name)
+        key_path = os.path.join(s3_key_prefix, bird_species, image_name)
+        s3_file = load_file_from_s3(key=key_path)
+        
         img = Image.open(BytesIO(s3_file)) #open the image from S3
 
     else: #if there is a file uploaded, just open it
