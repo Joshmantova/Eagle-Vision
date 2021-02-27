@@ -78,12 +78,16 @@ if __name__ == '__main__':
     index_to_class_label_dict = load_index_to_label_dict()
     all_image_files = load_all_image_files()
     types_of_birds = sorted(list(all_image_files['test'].keys())) #alphabetically sorting all the species
-    dataset_type_options = ["All Images", "Images Used To Train The Model",
-                            "Images Used To Tune The Model", "Images The Model Has Never Seen"]
+    # dataset_type_options = ["All Images", "Images Used To Train The Model",
+    #                         "Images Used To Tune The Model", "Images The Model Has Never Seen"]
 
     file = st.file_uploader('Upload An Image')
+    dtype_file_structure_mapping = {
+        'All Images': 'consolidated', 'Images Used To Train The Mode': 'train', 
+        'Images Used To Tune The Model': 'valid', 'Images The Model Has Never Seen': 'test'
+        }
     if not file: #if there's no file uploaded, display preset images to choose from
-        dataset_type = st.sidebar.selectbox("Data Portion Type", dataset_type_options)
+        dataset_type = st.sidebar.selectbox("Data Portion Type", list(dtype_file_structure_mapping.keys()))
         if dataset_type == 'All Images':
             dataset_type = "consolidated"
         elif dataset_type == 'Images Used To Tune The Model':
