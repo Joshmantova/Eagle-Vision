@@ -83,29 +83,30 @@ if __name__ == '__main__':
 
     file = st.file_uploader('Upload An Image')
     dtype_file_structure_mapping = {
-        'All Images': 'consolidated', 'Images Used To Train The Mode': 'train', 
+        'All Images': 'consolidated', 'Images Used To Train The Model': 'train', 
         'Images Used To Tune The Model': 'valid', 'Images The Model Has Never Seen': 'test'
         }
     if not file: #if there's no file uploaded, display preset images to choose from
         dataset_type = st.sidebar.selectbox("Data Portion Type", list(dtype_file_structure_mapping.keys()))
-        if dataset_type == 'All Images':
-            dataset_type = "consolidated"
-        elif dataset_type == 'Images Used To Tune The Model':
-            dataset_type = 'valid'
-        elif dataset_type == 'Images The Model Has Never Seen':
-            dataset_type = 'test'
-        elif dataset_type == 'Images Used To Train The Model':
-            dataset_type = 'train'
+        # if dataset_type == 'All Images':
+        #     dataset_type = "consolidated"
+        # elif dataset_type == 'Images Used To Tune The Model':
+        #     dataset_type = 'valid'
+        # elif dataset_type == 'Images The Model Has Never Seen':
+        #     dataset_type = 'test'
+        # elif dataset_type == 'Images Used To Train The Model':
+        #     dataset_type = 'train'
+        image_files_dtype = dtype_file_structure_mapping[dataset_type]
 
         bird_species = st.sidebar.selectbox("Bird Type", types_of_birds)
-        image_name_list = all_image_files[dataset_type][bird_species]
+        image_name_list = all_image_files[image_files_dtype][bird_species]
         image_name = st.sidebar.selectbox("Image Name", image_name_list)
         #S3 file structure is a little strange so this is necessary
         #consolidated has a nested and redundant folder
-        if dataset_type == 'consolidated':
+        if image_files_dtype == 'consolidated':
             s3_key_prefix = 'consolidated/consolidated'
         else:
-            s3_key_prefix = dataset_type
+            s3_key_prefix = image_files_dtype
         s3_file = load_file_from_s3(key=s3_key_prefix + '/' + bird_species + '/' + image_name)
         img = Image.open(BytesIO(s3_file)) #open the image from S3
 
