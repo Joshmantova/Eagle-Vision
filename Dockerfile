@@ -7,7 +7,7 @@ WORKDIR /app/src
 #We need to install torch CPU version because we're just serving the application and the CPU version is much smaller
 #Installing it separately because we need to install it from a specific location
 
-RUN pip --no-cache-dir install torch==1.7.1+cpu torchvision==0.8.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
+#RUN pip --no-cache-dir install torch==1.7.1+cpu torchvision==0.8.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
 
 #The rest of the necessary packages can be installed from requirements.txt with no cache dir allowing for installation on
 #machines with very little memory on board

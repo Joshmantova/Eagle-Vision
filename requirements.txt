@@ -1,5 +1,9 @@
-Cython==0.29.22
-pyarrow==3.0.0
+#Need to get the CPU version of torch packages from here:
+-f https://download.pytorch.org/whl/torch_stable.html
+torch==1.7.1+cpu
+torchvision==0.8.2+cpu
+
+#These other packages can be found on PyPi
 streamlit==0.76.0
 boto3==1.17.3
 Pillow==8.1.0
