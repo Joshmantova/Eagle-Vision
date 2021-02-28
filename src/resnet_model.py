@@ -34,8 +34,8 @@ class Resnet_Model:
         return model(inputs)
 
     def fit(self, train_loader, val_loader, num_epochs=10, criterion=None, 
-            optimizer=None, batch_size=16, early_stop_min_increase=0.0001, 
-            early_stop_patience=10):
+            optimizer=None, batch_size=16, early_stop_min_increase=0.003, 
+            early_stop_patience=10, lr=0.0001):
         start = time.time()
         model = self.model
         best_model = self.model.state_dict()
@@ -47,6 +47,11 @@ class Resnet_Model:
         epochs_no_improve = 0
         early_stop = False
         phases = ['train', 'val']
+
+        if not optimizer:
+            optimizer = optim.Adam(self.model.parameters(), lr=lr)
+        if not criterion:
+            criterion = nn.CrossEntropyLoss()
 
         for epoch in range(num_epochs):
             print(f"Epoch number: {epoch + 1} / {num_epochs}")
@@ -63,7 +68,60 @@ class Resnet_Model:
                 running_corrects = 0
 
                 for inputs, labels in data_loader:
-                    pass
+                    inputs = inputs.to(self.device)
+                    labels = labels.to(self.device)
+
+                    optimizer.zero_grad()
+
+                    with torch.set_grad_enabled(phase == 'train'):
+                        outputs = self.feed_forward(model, inputs)
+                        _, pred = torch.max(outputs, dim=1)
+                        loss = criterion(outputs, labels)
+
+                        if phase == 'train':
+                            loss.backward()
+                            optimizer.step()
+
+                    running_loss += loss.item() * inputs.size(0)
+                    running_corrects += torch.sum(pred == labels.data)
+
+                if phase == 'train':
+                    epoch_loss = running_loss / len(train_loader.dataset)
+                    train_loss_over_time.append(epoch_loss)
+                    epoch_acc = running_corrects.double() / len(train_loader.dataset)
+                    train_acc_over_time.append(epoch_acc)
+
+                else:
+                    epoch_loss = running_loss / len(val_loader.dataset)
+                    val_loss_over_time.append(epoch_loss)
+                    epoch_acc = running_corrects.double() / len(val_loader.dataset)
+                    val_acc_over_time.append(epoch_acc)
+
+                print(f"{phase} loss: {epoch_loss:.3f}, acc: {epoch_acc:.3f}")
+
+                if phase == 'val' and epoch_acc > best_acc:
+                    best_acc = epoch_acc
+                    best_model = model.state_dict()
+                    torch.save(model, 'trained_model_resnet50_checkpoint.pt')
+                    epochs_no_improve = 0
+
+                elif phase == 'val' and (epoch_acc - best_acc) < early_stop_min_increase:
+                    epochs_no_improve += 1
+                    print(f"Number of epochs without improvement has increased to {epochs_no_improve}")
+
+            if epochs_no_improve >= early_stop_patience:
+                early_stop = True
+                print('Early stopping!')
+                break
+
+            print('-' * 60)
+            total_time = (time.time() - start) / 60
+            print(f"Training completed. Time taken: {total_time:.3f} min\nBest accuracy: {best_acc:.3f}")
+            model.load_state_dict(best_model)
+            loss = {'train': train_loss_over_time, 'val': val_loss_over_time}
+            acc = {'train': train_acc_over_time, 'val': val_acc_over_time}
+            
+            return model, loss, acc
 
     def predict_proba(self, k):
         pass
