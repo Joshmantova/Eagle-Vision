@@ -22,19 +22,48 @@ import boto3
 class Resnet_Model:
 
     def __init__(self, path_to_pretrained_model=None, map_location='CPU', num_classes=250):
+        self.device = torch.device('cuda:0' if cuda.is_available() else 'cpu')
         if path_to_pretrained_model:
             self.model = torch.load(path_to_pretrained_model, map_location=map_location)
         else:
-            self.model = models.resnet50(pretrained=True)
-            for param in model.parameters():
-                param.require_grad = False
-            
+            self.model = self._setup_resnet(num_classes=250)
+
+        self.train_transform, self.val_transform, self.test_transform = self._setup_transform()
 
     def feed_forward(self, model, inputs):
         return model(inputs)
 
-    def fit(self, num_epochs, train_loader, val_loader):
-        pass
+    def fit(self, train_loader, val_loader, num_epochs=10, criterion=None, 
+            optimizer=None, batch_size=16, early_stop_min_increase=0.0001, 
+            early_stop_patience=10):
+        start = time.time()
+        model = self.model
+        best_model = self.model.state_dict()
+        best_acc = 0
+        train_loss_over_time = []
+        val_loss_over_time = []
+        train_acc_over_time = []
+        val_acc_over_time = []
+        epochs_no_improve = 0
+        early_stop = False
+        phases = ['train', 'val']
+
+        for epoch in range(num_epochs):
+            print(f"Epoch number: {epoch + 1} / {num_epochs}")
+
+            for phase in phases:
+                if phase == 'train':
+                    data_loader = train_loader
+                    model.train()
+                else:
+                    data_loader = val_loader
+                    model.eval()
+
+                running_loss = 0
+                running_corrects = 0
+
+                for inputs, labels in data_loader:
+                    pass
 
     def predict_proba(self, k):
         pass
@@ -48,6 +77,35 @@ class Resnet_Model:
                                 nn.ReLU(),
                                 nn.Dropout(0.30),
                                 )
+        model.to(self.device)
+        return model
+
+    def _setup_transform(self):
+        means = [0.485, 0.456, 0.406]
+        stds = [0.229, 0.224, 0.225]
+        train_transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.RandomRotation(45),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=means, std=stds)
+        ])
+
+        val_transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=means, std=stds)
+        ])
+
+        test_transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=means, std=stds)
+        ])
+
+        return (train_transform, val_transform, test_transform)
+
 
 #NOTE: this script is basically what was used to train. I did not train using
 #this exact script - it was trained on AWS using a sagemaker notebook
