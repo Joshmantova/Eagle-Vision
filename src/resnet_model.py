@@ -3,8 +3,7 @@ import json
 import torch
 from torch import (nn,
                     cuda,
-                    optim,
-                    device)
+                    optim)
 from torchvision import (models,
                         transforms,
                         datasets)
