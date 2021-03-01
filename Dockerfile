@@ -12,4 +12,4 @@ EXPOSE 8501
 
 #Running the streamlit app
 ENTRYPOINT ["streamlit", "run"]
-CMD ["bird_classification_website.py"]
+CMD ["Project Eagle Vision.py"]
