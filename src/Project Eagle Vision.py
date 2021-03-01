@@ -29,13 +29,16 @@ def load_index_to_label_dict(path='index_to_class_label.json'):
     index_to_class_label_dict = {int(k): v for k, v in index_to_class_label_dict.items()}
     return index_to_class_label_dict
 
-@st.cache()
-def load_file_from_s3(key, bucket_name='bird-classification-bucket'):
+def load_files_from_s3(keys, bucket_name='bird-classification-bucket'):
     """Retrieves files anonymously from my public S3 bucket"""
     s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
-    s3_file_raw = s3.get_object(Bucket=bucket_name, Key=key)
-    s3_file = s3_file_raw['Body'].read()
-    return s3_file
+    s3_files = []
+    for key in keys:
+        s3_file_raw = s3.get_object(Bucket=bucket_name, Key=key)
+        s3_file_cleaned = s3_file_raw['Body'].read()
+        s3_file_image = Image.open(BytesIO(s3_file_cleaned))
+        s3_files.append(s3_file_image)
+    return s3_files
 
 @st.cache()
 def load_all_image_files(path='all_image_files.json'):
@@ -51,7 +54,7 @@ def load_list_of_images_available(all_image_files, image_files_dtype, bird_speci
     return list_of_files
 
 @st.cache()
-def predict(img, index_to_label_dict, model):
+def predict(img, index_to_label_dict, model, k):
     """Transforming input image according to ImageNet paper
     The Resnet was initially trained on ImageNet dataset
     and because of the use of transfer learning, I froze all
@@ -65,7 +68,7 @@ def predict(img, index_to_label_dict, model):
     feeds the image through the model getting the output tensor,
     converts that output tensor to probabilities using Softmax,
     and then extracts and formats the top 3 predictions."""
-    formatted_predictions = model.predict_proba(img, 3, index_to_label_dict)
+    formatted_predictions = model.predict_proba(img, k, index_to_label_dict)
     return formatted_predictions
 
 if __name__ == '__main__':
@@ -87,47 +90,53 @@ if __name__ == '__main__':
         'All Images': 'consolidated', 'Images Used To Train The Model': 'train', 
         'Images Used To Tune The Model': 'valid', 'Images The Model Has Never Seen': 'test'
         }
+    types_of_images = list(dtype_file_structure_mapping.keys())
 
-    if not file:
-        dataset_type = st.sidebar.selectbox("Data Portion Type", list(dtype_file_structure_mapping.keys()))
-        image_files_dtype = dtype_file_structure_mapping[dataset_type]
-
-        bird_species = st.sidebar.selectbox("Bird Type", types_of_birds)
-        available_images = load_list_of_images_available(all_image_files, image_files_dtype, bird_species)
-        # three_random_images = [np.random.choice(i) for i in available_images]
-        three_random_images = []
-        for i in range(3):
-            c = np.random.choice(available_images)
-            three_random_images.append(c)
-        image_name = st.sidebar.selectbox("Image Name", available_images)
-        if image_files_dtype == 'consolidated':
-            s3_key_prefix = 'consolidated/consolidated'
-        else:
-            s3_key_prefix = image_files_dtype
-        key_path = os.path.join(s3_key_prefix, bird_species, image_name)
-        s3_file = load_file_from_s3(key=key_path)
-        three_other_images = [load_file_from_s3(os.path.join(s3_key_prefix, bird_species, i)) for i in three_random_images]
-        three_other_images = [Image.open(BytesIO(i)) for i in three_other_images]
-        img = Image.open(BytesIO(s3_file))
+    if file:
+        img = Image.open(file)
+        prediction = predict(img, index_to_class_label_dict, model, 5)
+        top_prediction = prediction[0][0]
+        available_images = all_image_files.get('train').get(top_prediction.upper())
+        examples_of_species = np.random.choice(available_images, size=3)
+        files_to_get_from_s3 = []
+        for im_name in examples_of_species:
+            path = os.path.join('train', top_prediction.upper(), im_name)
+            files_to_get_from_s3.append(path)
+        images_from_s3 = load_files_from_s3(keys=files_to_get_from_s3)
 
     else:
-        img = Image.open(file)
+        dataset_type = st.sidebar.selectbox("Data Portion Type", types_of_images)
+        image_files_subset = dtype_file_structure_mapping[dataset_type]
 
-    prediction = predict(img, index_to_class_label_dict, model)
+        selected_species = st.sidebar.selectbox("Bird Type", types_of_birds)
+        available_images = load_list_of_images_available(all_image_files, image_files_subset, selected_species)
+        image_name = st.sidebar.selectbox("Image Name", available_images)
+        if image_files_subset == 'consolidated':
+            s3_key_prefix = 'consolidated/consolidated'
+        else:
+            s3_key_prefix = image_files_subset
+        key_path = os.path.join(s3_key_prefix, selected_species, image_name)
+        files_to_get_from_s3 = [key_path]
+        examples_of_species = np.random.choice(available_images, size=3)
+        for im in examples_of_species:
+            path = os.path.join(s3_key_prefix, selected_species, im)
+            files_to_get_from_s3.append(path)
+        images_from_s3 = load_files_from_s3(keys=files_to_get_from_s3)
+        img = images_from_s3.pop(0)
+        prediction = predict(img, index_to_class_label_dict, model, 5)
+
     st.title("Here is the image you've selected")
     resized_image = img.resize((448, 448))
     st.image(resized_image)
     st.title("Here are the three most likely bird species")
-    df = pd.DataFrame(data=np.zeros((3, 2)), 
-                        columns=['Species', 'Confidence Level'])
+    df = pd.DataFrame(data=np.zeros((5, 2)), 
+                        columns=['Species', 'Confidence Level'],
+                        index=np.linspace(1, 5, 5, dtype=int))
     for idx, p in enumerate(prediction):
         df.iloc[idx, 0] = p[0]
         df.iloc[idx, 1] = p[1]
     st.write(df)
-    st.title("Here are three other images of that type of bird")
+    st.title(f"Here are three other images of the {prediction[0][0]}")
 
-    st.image(three_other_images)
-    # for i in three_other_images:
-    #     img = Image.open(BytesIO(i))
-    #     st.image(img)
-#If someone uploads an image, retrieve three images of the predicted species
+    st.image(images_from_s3)
+    st.title('How it works:')
