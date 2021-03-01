@@ -8,6 +8,8 @@ from botocore import UNSIGNED #contact public s3 buckets anonymously
 from botocore.client import Config #contact public s3 buckets anonymously
 
 import streamlit as st
+import pandas as pd
+import numpy as np
 
 from resnet_model import Resnet_Model
 
@@ -73,6 +75,12 @@ if __name__ == '__main__':
     types_of_birds = sorted(list(all_image_files['test'].keys()))
 
     st.title('Welcome To Project Eagle Vision!')
+    instructions = """
+        Either upload your own image or select from the sidebar to get a preconfigured image. 
+        The image you select or upload will be fed through the Deep Neural Network in real-time 
+        and the output will be displayed to the screen.
+        """
+    st.write(instructions)
 
     file = st.file_uploader('Upload An Image')
     dtype_file_structure_mapping = {
@@ -86,6 +94,11 @@ if __name__ == '__main__':
 
         bird_species = st.sidebar.selectbox("Bird Type", types_of_birds)
         available_images = load_list_of_images_available(all_image_files, image_files_dtype, bird_species)
+        # three_random_images = [np.random.choice(i) for i in available_images]
+        three_random_images = []
+        for i in range(3):
+            c = np.random.choice(available_images)
+            three_random_images.append(c)
         image_name = st.sidebar.selectbox("Image Name", available_images)
         if image_files_dtype == 'consolidated':
             s3_key_prefix = 'consolidated/consolidated'
@@ -93,13 +106,28 @@ if __name__ == '__main__':
             s3_key_prefix = image_files_dtype
         key_path = os.path.join(s3_key_prefix, bird_species, image_name)
         s3_file = load_file_from_s3(key=key_path)
-        
+        three_other_images = [load_file_from_s3(os.path.join(s3_key_prefix, bird_species, i)) for i in three_random_images]
+        three_other_images = [Image.open(BytesIO(i)) for i in three_other_images]
         img = Image.open(BytesIO(s3_file))
 
     else:
         img = Image.open(file)
 
     prediction = predict(img, index_to_class_label_dict, model)
-    st.image(img)
-    for idx, p in enumerate(prediction, start=1):
-        st.write(f"Top {idx} prediction: {p[0]}, Confidence level: {p[1]}")
+    st.title("Here is the image you've selected")
+    resized_image = img.resize((448, 448))
+    st.image(resized_image)
+    st.title("Here are the three most likely bird species")
+    df = pd.DataFrame(data=np.zeros((3, 2)), 
+                        columns=['Species', 'Confidence Level'])
+    for idx, p in enumerate(prediction):
+        df.iloc[idx, 0] = p[0]
+        df.iloc[idx, 1] = p[1]
+    st.write(df)
+    st.title("Here are three other images of that type of bird")
+
+    st.image(three_other_images)
+    # for i in three_other_images:
+    #     img = Image.open(BytesIO(i))
+    #     st.image(img)
+#If someone uploads an image, retrieve three images of the predicted species
