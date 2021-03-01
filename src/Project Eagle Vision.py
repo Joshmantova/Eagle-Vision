@@ -140,4 +140,4 @@ if __name__ == '__main__':
     st.title(f"Here are three other images of the {prediction[0][0]}")
 
     st.image(images_from_s3)
-    st.title('How it works:')
+    # st.title('How it works:')
