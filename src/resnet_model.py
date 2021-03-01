@@ -32,7 +32,20 @@ class Resnet_Model:
         self.train_transform, self.val_transform, self.test_transform = self._setup_transform()
 
     def feed_forward(self, model, inputs):
-        return model(inputs)
+        """
+        Feeds inputs through model
+
+        params
+        ---------------
+        model - torch model to feed inputs through
+        inputs - inputs to feed through model
+
+        returns
+        ---------------
+        output_tensor - torch tensor - tensor of final output layer after feed forward
+        """
+        output_tensor = model(inputs)
+        return output_tensor
 
     def fit(self, train_loader, val_loader, num_epochs=10, criterion=None, 
             optimizer=None, batch_size=16, early_stop_min_increase=0.003, 
