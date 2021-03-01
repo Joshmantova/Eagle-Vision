@@ -72,6 +72,14 @@ if __name__ == '__main__':
     all_image_files = load_all_image_files()
     types_of_birds = sorted(list(all_image_files['test'].keys()))
 
+    st.title('Welcome To Project Eagle Vision!')
+    instructions = """
+        Either upload your own image or select from the sidebar to get a preconfigured image. 
+        The image you select or upload will be fed through the Deep Neural Network in real-time 
+        and the output will be displayed to the screen.
+        """
+    st.write(instructions)
+
     file = st.file_uploader('Upload An Image')
     dtype_file_structure_mapping = {
         'All Images': 'consolidated', 'Images Used To Train The Model': 'train', 
@@ -98,6 +106,7 @@ if __name__ == '__main__':
         img = Image.open(file)
 
     prediction = predict(img, index_to_class_label_dict, model)
-    st.image(img)
+    resized_image = img.resize((448, 448))
+    st.image(resized_image)
     for idx, p in enumerate(prediction, start=1):
         st.write(f"Top {idx} prediction: {p[0]}, Confidence level: {p[1]}")
