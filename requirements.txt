@@ -7,3 +7,4 @@ torchvision==0.8.2+cpu
 streamlit==0.76.0
 boto3==1.17.3
 Pillow==8.1.0
+pandas==1.1.3
