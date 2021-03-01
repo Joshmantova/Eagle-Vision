@@ -67,7 +67,7 @@ def predict(img, index_to_label_dict, model, k):
     puts it to the necessary device (cpu by default here),
     feeds the image through the model getting the output tensor,
     converts that output tensor to probabilities using Softmax,
-    and then extracts and formats the top 3 predictions."""
+    and then extracts and formats the top k predictions."""
     formatted_predictions = model.predict_proba(img, k, index_to_label_dict)
     return formatted_predictions
 
@@ -76,6 +76,7 @@ if __name__ == '__main__':
     index_to_class_label_dict = load_index_to_label_dict()
     all_image_files = load_all_image_files()
     types_of_birds = sorted(list(all_image_files['test'].keys()))
+    types_of_birds = [bird.title() for bird in types_of_birds]
 
     st.title('Welcome To Project Eagle Vision!')
     instructions = """
@@ -109,17 +110,17 @@ if __name__ == '__main__':
         image_files_subset = dtype_file_structure_mapping[dataset_type]
 
         selected_species = st.sidebar.selectbox("Bird Type", types_of_birds)
-        available_images = load_list_of_images_available(all_image_files, image_files_subset, selected_species)
+        available_images = load_list_of_images_available(all_image_files, image_files_subset, selected_species.upper())
         image_name = st.sidebar.selectbox("Image Name", available_images)
         if image_files_subset == 'consolidated':
             s3_key_prefix = 'consolidated/consolidated'
         else:
             s3_key_prefix = image_files_subset
-        key_path = os.path.join(s3_key_prefix, selected_species, image_name)
+        key_path = os.path.join(s3_key_prefix, selected_species.upper(), image_name)
         files_to_get_from_s3 = [key_path]
         examples_of_species = np.random.choice(available_images, size=3)
         for im in examples_of_species:
-            path = os.path.join(s3_key_prefix, selected_species, im)
+            path = os.path.join(s3_key_prefix, selected_species.upper(), im)
             files_to_get_from_s3.append(path)
         images_from_s3 = load_files_from_s3(keys=files_to_get_from_s3)
         img = images_from_s3.pop(0)
