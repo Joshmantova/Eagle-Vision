@@ -7,58 +7,15 @@ import boto3
 from botocore import UNSIGNED #contact public s3 buckets anonymously
 from botocore.client import Config #contact public s3 buckets anonymously
 
-import torch
-from torchvision import transforms
-
 import streamlit as st
 
-@st.cache()
-def predict(img, index_to_label_dict, model, device='cpu'):
-    """Transforming input image according to ImageNet paper
-    The Resnet was initially trained on ImageNet dataset
-    and because of the use of transfer learning, I froze all
-    weights and only learned weights on the final layer.
-    The weights of the first layer are still what was
-    used in the ImageNet paper and we need to process
-    the new images just like they did.
-    
-    This function transforms the image accordingly,
-    puts it to the necessary device (cpu by default here),
-    feeds the image through the model getting the output tensor,
-    converts that output tensor to probabilities using Softmax,
-    and then extracts and formats the top 3 predictions."""
-    transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-        )
-    ])
-    
-    img_t = transform(img)
-    img_t = torch.unsqueeze(img_t, 0)
-    img_t = img_t.to(device)
-
-    model.eval()
-    output_tensor = model(img_t)
-    prob_tensor = torch.nn.Softmax(dim=1)(output_tensor)
-    top_3 = torch.topk(prob_tensor, 3, dim=1)
-    probabilites = top_3.values.detach().numpy().flatten() #tensor --> numpy array
-    indices = top_3.indices.detach().numpy().flatten()
-    formatted_predictions = []
-    
-    for pred_prob, pred_idx in zip(probabilites, indices):
-        predicted_label = index_to_label_dict[pred_idx].title()
-        predicted_prob = pred_prob * 100
-        formatted_predictions.append((predicted_label, f"{predicted_prob:.3f}%"))
-    return formatted_predictions
+from resnet_model import Resnet_Model
 
 @st.cache()
 def load_model(path='../models/trained_model_resnet50.pt', device='cpu'):
     """Retrieves the trained model and maps it to the CPU by default, can also specify GPU here."""
-    return torch.load(path, map_location=device)
+    model = Resnet_Model(path_to_pretrained_model=path, map_location=device)
+    return model
 
 @st.cache()
 def load_index_to_label_dict(path='index_to_class_label.json'):
@@ -90,6 +47,24 @@ def load_list_of_images_available(all_image_files, image_files_dtype, bird_speci
     species_dict = all_image_files.get(image_files_dtype)
     list_of_files = species_dict.get(bird_species)
     return list_of_files
+
+@st.cache()
+def predict(img, index_to_label_dict, model):
+    """Transforming input image according to ImageNet paper
+    The Resnet was initially trained on ImageNet dataset
+    and because of the use of transfer learning, I froze all
+    weights and only learned weights on the final layer.
+    The weights of the first layer are still what was
+    used in the ImageNet paper and we need to process
+    the new images just like they did.
+    
+    This function transforms the image accordingly,
+    puts it to the necessary device (cpu by default here),
+    feeds the image through the model getting the output tensor,
+    converts that output tensor to probabilities using Softmax,
+    and then extracts and formats the top 3 predictions."""
+    formatted_predictions = model.predict_proba(img, 3, index_to_label_dict)
+    return formatted_predictions
 
 if __name__ == '__main__':
     model = load_model()
