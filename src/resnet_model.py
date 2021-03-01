@@ -154,9 +154,9 @@ class Resnet_Model:
 
         return preds, labels_list
 
-    def predict_proba(self, img, k, index_to_class_labels, show=True):
+    def predict_proba(self, img, k, index_to_class_labels, show=False):
         if show:
-            Image.show(img)
+            img.show()
         img = self.test_transform(img)
         img = img.unsqueeze(0)
         img = img.to(self.device)
