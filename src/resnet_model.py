@@ -14,6 +14,15 @@ from PIL import Image
 class Resnet_Model:
 
     def __init__(self, path_to_pretrained_model=None, map_location='cpu', num_classes=250):
+        """
+        Allows for training, evaluation, and prediction of ResNet Models
+
+        params
+        ---------------
+        path_to_pretrained_model - string - relative path to pretrained model - default None
+        map_location - string - device to put model on - default cpu
+        num_classes - int - number of classes to put on the deheaded ResNet
+        """
         self.device = torch.device('cuda:0' if cuda.is_available() else 'cpu')
         if path_to_pretrained_model:
             self.model = torch.load(path_to_pretrained_model, map_location=map_location)
@@ -28,6 +37,27 @@ class Resnet_Model:
     def fit(self, train_loader, val_loader, num_epochs=10, criterion=None, 
             optimizer=None, batch_size=16, early_stop_min_increase=0.003, 
             early_stop_patience=10, lr=0.0001):
+        """
+        Impliments transfer learning based on new data
+
+        params
+        ---------------
+        train_loader - torch DataLoader - Configured DataLoader for training, helpful when images are flowing from folder
+        val_loader - torch DataLoader - Configured DataLoader for validation, helpful when images are flowing from folder
+        num_epochs - int - number of epochs to use during training
+        criterion - Loss function to assess model during training and evaluation - default None and CrossEntropyLoss
+        optimizer - Optimizer algorithm - default Adam
+        batch_size - int - Number of images to use per optimizer update - default 16
+        early_stop_min_increase - float - Minimum increase in accuracy score to indicate model improvement per epoch - default 0.003
+        early_stop_patience - int - Number of epochs to allow less than or equal to minimum improvement - default 10
+        lr - float - Learning rate for optimization algorithm - default 0.0001
+
+        returns
+        ---------------
+        model - trained torch model
+        loss - list - history of loss across epochs
+        acc - list - history of accuracy across epochs
+        """
         #TODO: change data loader params to data params then in this function,
         #Transform those to data loaders so that the batch size can be dynamic
         start = time.time()
@@ -119,6 +149,21 @@ class Resnet_Model:
             return model, loss, acc
 
     def evaluate(self, test_loader, model=None, criterion=None):
+        """
+        Feeds set of images through model and evaluates relevant metrics
+        as well as batch predicts. Prints loss and accuracy
+
+        params
+        ---------------
+        test_loader - torch DataLoader - Configured DataLoader for evaluation, helpful when images flow from directory
+        model - trained torch model - Model to use during evaluation - default None which retrieves model from attributes
+        criterion - Loss function to assess model - Default None which equates to CrossEntropyLoss.
+
+        returns
+        ---------------
+        preds - list - List of predictions to use for evaluation of non-included metrics
+        labels_list - list - List of labels to use for evaluation of non-included metrics
+        """
         if not model:
             model = self.model
         if not criterion:
@@ -155,6 +200,20 @@ class Resnet_Model:
         return preds, labels_list
 
     def predict_proba(self, img, k, index_to_class_labels, show=False):
+        """
+        Feeds single image through network and returns top k predicted labels and probabilities
+
+        params
+        ---------------
+        img - PIL Image - Single image to feed through model
+        k - int - Number of top predictions to return
+        index_to_class_labels - dict - Dictionary to map indices to class labels
+        show - bool - Whether or not to display the image before prediction - default False
+
+        returns
+        ---------------
+        formatted_predictions - list - List of top k formatted predictions formatted to include a tuple of 1. predicted label, 2. predicted probability as str
+        """
         if show:
             img.show()
         img = self.test_transform(img)
@@ -176,6 +235,19 @@ class Resnet_Model:
         return formatted_predictions
 
     def _setup_resnet(self, num_classes):
+        """
+        Hidden function used in init if no pretrained model is specified. Helpful for implimenting transfer learning.
+        It freezes all layers and then adds two final layers: one fully connected layer with RELU activation and dropout,
+        and another as a final layer with number of class predictions as number of nodes. Also sends model to necessary device.
+
+        params
+        ---------------
+        num_classes - int - Number of classes to predict
+
+        returns
+        ---------------
+        model - torch model - torch model set up for transfer learning
+        """
         model = models.resnet50(pretrained=True)
         for param in model.parameters():
             param.require_grad = False
@@ -183,11 +255,28 @@ class Resnet_Model:
         model.fc = nn.Sequential(nn.Linear(model.fc.in_features, 1024),
                                 nn.ReLU(),
                                 nn.Dropout(0.30),
+                                nn.Linear(1024, num_classes)
                                 )
         model.to(self.device)
         return model
 
     def _setup_transform(self):
+        """
+        Sets up transformations needed for train data, val data, and test data.
+        Uses much of the image processing from ImageNet paper and includes some 
+        image augmentation for training. Val and test transformers only perform
+        minimum necessary processing.
+
+        params
+        ---------------
+        None
+
+        returns
+        ---------------
+        train_transform - torch transformer - transformer to use during training
+        val_transform - torch transformer - transformer to use during validation
+        test_transform - torch transformer - transformer to use during testing and inference
+        """
         means = [0.485, 0.456, 0.406]
         stds = [0.229, 0.224, 0.225]
         train_transform = transforms.Compose([
@@ -214,6 +303,7 @@ class Resnet_Model:
         return (train_transform, val_transform, test_transform)
 
 if __name__ == '__main__':
+    #tests script to predict on single local image
     model = Resnet_Model(path_to_pretrained_model='../models/trained_model_resnet50.pt')
     with open('index_to_class_label.json', 'rb') as f:
         j = json.load(f)
