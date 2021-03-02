@@ -127,15 +127,18 @@ if __name__ == '__main__':
         prediction = predict(img, index_to_class_label_dict, model, 5)
 
     st.title("Here is the image you've selected")
-    resized_image = img.resize((448, 448))
+    # resized_image = img.resize((448, 448))
+    resized_image = img.resize((336,336))
     st.image(resized_image)
-    st.title("Here are the three most likely bird species")
-    df = pd.DataFrame(data=np.zeros((5, 2)), 
-                        columns=['Species', 'Confidence Level'],
+    st.title("Here are the five most likely bird species")
+    st.write('Hint: You can triple click on the Wikipedia link and copy it to learn more about a species.')
+    df = pd.DataFrame(data=np.zeros((5, 3)), 
+                        columns=['Species', 'Confidence Level', 'Wikipedia Link'],
                         index=np.linspace(1, 5, 5, dtype=int))
     for idx, p in enumerate(prediction):
         df.iloc[idx, 0] = p[0]
         df.iloc[idx, 1] = p[1]
+        df.iloc[idx, 2] = 'en.wikipedia.org/wiki/' + p[0].lower().replace(' ', '_')
     st.write(df)
     st.title(f"Here are three other images of the {prediction[0][0]}")
 
