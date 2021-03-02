@@ -1,14 +1,13 @@
 import time
 import json
-import torch
-from torch import (nn,
-                    cuda,
-                    optim)
-from torchvision import (models,
-                        transforms,
-                        datasets)
 from torch.utils.data import DataLoader
 from PIL import Image
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import (models,
+                        transforms)
+import copy
 
 class Resnet_Model:
 
@@ -22,7 +21,7 @@ class Resnet_Model:
         map_location - string - device to put model on - default cpu
         num_classes - int - number of classes to put on the deheaded ResNet
         """
-        self.device = torch.device('cuda:0' if cuda.is_available() else 'cpu')
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         if path_to_pretrained_model:
             self.model = torch.load(path_to_pretrained_model, map_location=map_location)
         else:
@@ -74,7 +73,7 @@ class Resnet_Model:
         #Transform those to data loaders so that the batch size can be dynamic
         start = time.time()
         model = self.model
-        best_model = self.model.state_dict()
+        best_model_wts = copy.deepcopy(self.model.state_dict())
         best_acc = 0
         train_loss_over_time = []
         val_loss_over_time = []
@@ -137,7 +136,7 @@ class Resnet_Model:
 
                 if phase == 'val' and epoch_acc > best_acc:
                     best_acc = epoch_acc
-                    best_model = model.state_dict()
+                    best_model_wts = copy.deepcopy(model.state_dict())
                     torch.save(model, 'trained_model_resnet50_checkpoint.pt')
                     epochs_no_improve = 0
 
@@ -153,7 +152,7 @@ class Resnet_Model:
             print('-' * 60)
             total_time = (time.time() - start) / 60
             print(f"Training completed. Time taken: {total_time:.3f} min\nBest accuracy: {best_acc:.3f}")
-            model.load_state_dict(best_model)
+            model.load_state_dict(best_model_wts)
             self.model = model
             loss = {'train': train_loss_over_time, 'val': val_loss_over_time}
             acc = {'train': train_acc_over_time, 'val': val_acc_over_time}
