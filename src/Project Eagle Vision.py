@@ -130,10 +130,6 @@ if __name__ == '__main__':
     resized_image = img.resize((336,336))
     st.image(resized_image)
     st.title("Here are the five most likely bird species")
-    st.write("""
-    Hint: Each bird name in the table below is a clickable link that will
-    take you the wikipedia page for more information on that bird.
-    """)
     df = pd.DataFrame(data=np.zeros((5, 2)), 
                         columns=['Species', 'Confidence Level'],
                         index=np.linspace(1, 5, 5, dtype=int))
