@@ -1,9 +1,7 @@
-# Eagle-Vision
-Bird classification project
+# Project Eagle Vision
+Before I go over anything else, here's a link the website hosting the app:
 
-# Here are two links that will take you to the website hosting my app:
-https://bit.ly/3r3ebFY
+[Eagle Vision Homepage](http://ec2-52-39-236-240.us-west-2.compute.amazonaws.com:8501/)
 
-OR
 
-http://ec2-52-39-236-240.us-west-2.compute.amazonaws.com:8501/
+
