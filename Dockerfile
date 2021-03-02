@@ -11,5 +11,5 @@ RUN pip --no-cache-dir install -r ../requirements.txt
 EXPOSE 8501
 
 #Running the streamlit app
-ENTRYPOINT ["streamlit", "run"]
+ENTRYPOINT ["streamlit", "run", "--server.maxUploadSize=5"]
 CMD ["Project Eagle Vision.py"]
