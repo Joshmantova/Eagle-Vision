@@ -16,9 +16,14 @@ Technologies used:
 This project involved using Deep Convolutional Neural network to create a machine learining application that could classify 250 bird species based on images. The model architecture is a [ResNet50](https://en.wikipedia.org/wiki/Residual_neural_network) that was initially trained on the [ImageNet Dataset](https://en.wikipedia.org/wiki/ImageNet). Transfer learning was utilized to fine tune the ImageNet model to learn how to classify birds. After training, the model correctly identified 97% of bird images held out from training. The trained model was then deployed in an interactive website to allow users to identify their own bird pictures.
 
 # Introduction
-My girlfriend and I love to birdwatch. She is extremely talented at identifying the species of a bird based on very few cues. I on the other hand - am not so great at identification. Although I enjoy birdwatching just as much, I am nowhere near as good at identification. Just like I rely on my smartphone's naviagation features to circumvent my lack of direction, I thought: why not use what I am good at - machine learning! With the help of a little math, the tables have turned and now I am the one who is better at identification.
+My girlfriend and I love to birdwatch. She is extremely talented at identifying the species of a bird based on very few cues. Although I enjoy birdwatching just as much, I tend to think that every big bird I see is either an Eagle or a Hawk. I'm correct a surprising amount of the time but my predictions are not all that sophisticated. 
+
+I started thinking about bird identification as a supervised learning problem - there are certain visual cues that when combined, lead to a certain classification. That's when it became obvious that instead of getting better at identification myself, I could use my computer as a crutch and have it learn how to identify birds for me! With the help of a little math (okay.. a lot of math), the tables have turned; now out of myself and my girlfriend, I am the better bird classifier.
 
 # Dataset
+The dataset used for this project was found [on Kaggle](https://www.kaggle.com/gpiosenka/100-bird-species). Someone else went through the hard work of compiling and cleaning bird images so that I didn't have to. The dataset included 250 species of birds with about 100 - 130 training images of each species. Although this class imbalance did exist in the training data, it did not substantially affect the model scores. The validation and test data each included 5 images of each species. 
+
+In any given image, the bird was near the center of the image and took up at least 50% of the image. This made it great for training but not the best for use in real world inference. Having said that, each species of bird had a variety of different positions they would be in including flying, sitting, perched on trees, etc. Although any model trained on this data would not likely be able to correctly identify a bird from far away, it would be likely to correctly identify a bird regardless of what position the bird was in.
 
 # Model Architecture
 ![](imgs/resnet50_architecture.jpg)
