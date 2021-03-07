@@ -1,7 +1,16 @@
 # Project Eagle Vision
 Before I go over anything else, here's a link the website hosting the app:
 
-[Eagle Vision Homepage](http://ec2-52-39-236-240.us-west-2.compute.amazonaws.com:8501/)
+<!-- [Eagle Vision Homepage](http://ec2-52-39-236-240.us-west-2.compute.amazonaws.com:8501/) -->
+The following link will start up the webserver and start the app. You may need to refresh the page a couple of times as the instructions
+will tell you. It shouldn't take more than 60 seconds to start it up.
+[Eagle Vision Homepage](https://hsd329wsvd.execute-api.us-west-2.amazonaws.com/default/runEC2Instance)
+
+The link above is actually not the link to the website - instead, it's a link to a API Endpoint that triggers a serverless AWS Lambda function
+that will start up the webserver instance and run the necessary code to start the app. The endpoint times out after 30 seconds and because
+starting up the instance will always take 45-60 seconds, you should expect for it to take a little bit, and then ask you to refresh the page.
+After refreshing the page, it should provide you a link to the webapp that just started up. After 5 minutes of inactivity, the webserver
+will shut back down. This is done to allow people to use the app whenever they'd like without making me pay for 24/7 hosting.
 
 Technologies used: 
 * Python
@@ -11,6 +20,8 @@ Technologies used:
 * AWS EC2
 * AWS Sagemaker
 * AWS S3
+* AWS Lambda
+* AWS API Gateway
 
 ![](imgs/Bald-Eagle.jpg)
 
