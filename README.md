@@ -4,6 +4,7 @@ Before I go over anything else, here's a link the website hosting the app:
 <!-- [Eagle Vision Homepage](http://ec2-52-39-236-240.us-west-2.compute.amazonaws.com:8501/) -->
 The following link will start up the webserver and start the app. You may need to refresh the page a couple of times as the instructions
 will tell you. It shouldn't take more than 60 seconds to start it up.
+
 [Eagle Vision Homepage](https://hsd329wsvd.execute-api.us-west-2.amazonaws.com/default/runEC2Instance)
 
 The link above is actually not the link to the website - instead, it's a link to a API Endpoint that triggers a serverless AWS Lambda function
