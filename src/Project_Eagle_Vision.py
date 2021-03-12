@@ -20,7 +20,7 @@ def load_model(path='models/trained_model_resnet50.pt', device='cpu'):
     return model
 
 @st.cache()
-def load_index_to_label_dict(path='index_to_class_label.json'):
+def load_index_to_label_dict(path='src/index_to_class_label.json'):
     """Retrieves and formats the index to class label lookup dictionary needed to 
     make sense of the predictions. When loaded in, the keys are strings, this also
     processes those keys to integers."""
@@ -41,7 +41,7 @@ def load_files_from_s3(keys, bucket_name='bird-classification-bucket'):
     return s3_files
 
 @st.cache()
-def load_all_image_files(path='all_image_files.json'):
+def load_all_image_files(path='src/all_image_files.json'):
     """Retrieves JSON document outining the S3 file structure"""
     with open(path, 'r') as f:
         return json.load(f)
