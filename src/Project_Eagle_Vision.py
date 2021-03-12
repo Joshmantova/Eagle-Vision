@@ -15,6 +15,7 @@ from resnet_model import Resnet_Model
 import os
 
 st.write(os.listdir())
+st.write('Current directory: ')
 st.write(os.curdir)
 st.write(os.listdir('../'))
 # @st.cache()
