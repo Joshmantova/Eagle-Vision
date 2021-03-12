@@ -15,6 +15,7 @@ from resnet_model import Resnet_Model
 import os
 
 st.write(os.listdir())
+st.write(os.curdir)
 st.write(os.listdir('../'))
 # @st.cache()
 # def load_model(path='../models/trained_model_resnet50.pt', device='cpu'):
