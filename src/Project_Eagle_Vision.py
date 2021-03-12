@@ -16,7 +16,7 @@ import os
 
 st.write(os.listdir())
 st.write('Current directory: ')
-st.write(os.curdir)
+st.write(os.getcwd())
 st.write(os.listdir('../'))
 # @st.cache()
 # def load_model(path='../models/trained_model_resnet50.pt', device='cpu'):
