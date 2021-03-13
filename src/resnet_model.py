@@ -195,11 +195,11 @@ class Resnet_Model:
                 outputs = self.feed_forward(model, inputs)
                 loss = criterion(outputs, labels)
                 _, pred = torch.max(outputs, dim=1)
-                preds.append(pred)
-                labels_list.append(labels)
+                preds.append(pred.item())
+                labels_list.append(labels.item())
 
             test_loss += loss.item() * inputs.size(0)
-            correct = preds.eq(labels.data.view_as(pred))
+            correct = pred.eq(labels.data.view_as(pred))
             accuracy = torch.mean(correct.type(torch.FloatTensor))
             test_acc += accuracy.item() * inputs.size(0)
 
