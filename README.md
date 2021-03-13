@@ -11,8 +11,6 @@ Technologies used:
 * AWS EC2
 * AWS Sagemaker
 * AWS S3
-* AWS Lambda
-* AWS API Gateway
 
 ![](imgs/Bald-Eagle.jpg)
 
@@ -41,6 +39,7 @@ A ResNet50 model was used as the model for this project. Because this model has 
     * Recall score of .78 and F1 score of .87
     * Most frequently mistook the Barn Swallow for a Tree Swallow
 
+Here are examples of both a Barn Swallow and a Tree Swallow. Can you identify which is which?
 ### Barn Swallow:
 ![](imgs/barn_swallow.jpg)
 
@@ -48,6 +47,11 @@ A ResNet50 model was used as the model for this project. Because this model has 
 ![](imgs/tree_swallow.jpg)
 
 # Streamlit App
+
+I created a publically hosted application using Streamlit to showcase this project and allow users to interact with the trained model with a no-code implimentation. Users can select from any of the images I used for training, validation, and testing or they can upload their own image and see how the model would classify it.
+
+The app outputs a table of the top five predictions including confidence levels of each prediction and a link to the Wikipedia page of the bird species in case users want to learn more.
+![](imgs/st_app_shot.jpeg)
 
 # Future direcitons
 I have several ideas to improve this project:
