@@ -1,18 +1,6 @@
 # Project Eagle Vision
 Before I go over anything else, here's a link the website hosting the app:
 
-<!-- [Eagle Vision Homepage](http://ec2-52-39-236-240.us-west-2.compute.amazonaws.com:8501/) -->
-<!-- The following link will start up the webserver and start the app. You may need to refresh the page a couple of times as the instructions
-will tell you. It shouldn't take more than 60 seconds to start it up.
-
-[Eagle Vision Homepage](https://hsd329wsvd.execute-api.us-west-2.amazonaws.com/default/runEC2Instance)
-
-The link above is actually not the link to the website - instead, it's a link to a API Endpoint that triggers a serverless AWS Lambda function
-that will start up the webserver instance and run the necessary code to start the app. The endpoint times out after 30 seconds and because
-starting up the instance will always take 45-60 seconds, you should expect for it to take a little bit, and then ask you to refresh the page.
-After refreshing the page, it should provide you a link to the webapp that just started up. After 5 minutes of inactivity, the webserver
-will shut back down. This is done to allow people to use the app whenever they'd like without making me pay for 24/7 hosting. -->
-
 [Eagle Vision Homepage](https://share.streamlit.io/joshmantova/eagle-vision/prod/src/Project_Eagle_Vision.py)
 
 Technologies used: 
@@ -46,13 +34,23 @@ In any given image, the bird was near the center of the image and took up at lea
 A ResNet50 model was used as the model for this project. Because this model has been so successful in so many image classification competitions in the past and my best ResNet model score was good enough for me, I did not explore any other model architectures. The model weights were initially trained on the [ImageNet Dataset](https://en.wikipedia.org/wiki/ImageNet) and only the last two layers - including the new top - were fine tuned. This allowed me to train this model and iterate through hyperparameter combinations much more quickly than would have been possible otherwise. I also used my own implementation of [early stopping](https://en.wikipedia.org/wiki/Early_stopping) to prevent overfitting and decrease training time. Pytorch was my weapon of choice as a programming framework because of the ease of use and amount of model customization possible.
 
 # Model Scores
-* which birds did the model struggle with?
+* Training accuracy, weighted recall, weighted precision, and weighted F1 scores were all .99
+    * Validation scores were all .98
+    * Holdout test scores were all .98
+* Among all training images, the model had the hardest time classifying the Barn Swallow
+    * Recall score of .78 and F1 score of .87
+    * Most frequently mistook the Barn Swallow for a Tree Swallow
+
+### Barn Swallow:
+![](imgs/barn_swallow.jpg)
+
+### Tree Swallow:
+![](imgs/tree_swallow.jpg)
 
 # Streamlit App
 
 # Future direcitons
 I have several ideas to improve this project:
-* Add wikipedia link to bird species in pandas dataframe for each predicted species
 * Add explanations for how the CNN works with multiple levels of explanation depending on user selection of dropbox
 * If predicted confidence is under some threshold, say something about not being sure about the prediction
 * Potentially have a stacked model where the first model predicts if the image is a bird or not - if not, do something funny to the user for trying to trick me
