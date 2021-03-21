@@ -245,6 +245,9 @@ class Resnet_Model:
 
         return formatted_predictions
 
+    #change predict proba to actually be in line with sklearn's API and create another function that formats the raw probabilities.
+    #Then go back in to the website, and change the code accordingly.
+
     def _setup_resnet(self, num_classes):
         """
         Hidden function used in init if no pretrained model is specified. Helpful for implimenting transfer learning.
