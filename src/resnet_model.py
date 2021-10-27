@@ -6,8 +6,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import (models,
-                        transforms)
+                         transforms)
 import copy
+
 
 class ResnetModel:
 
@@ -21,9 +22,11 @@ class ResnetModel:
         map_location - string - device to put model on - default cpu
         num_classes - int - number of classes to put on the deheaded ResNet
         """
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device(
+            'cuda:0' if torch.cuda.is_available() else 'cpu')
         if path_to_pretrained_model:
-            self.model = torch.load(path_to_pretrained_model, map_location=map_location)
+            self.model = torch.load(
+                path_to_pretrained_model, map_location=map_location)
         else:
             self.model = self._setup_resnet(num_classes=250)
 
@@ -45,8 +48,8 @@ class ResnetModel:
         output_tensor = model(inputs)
         return output_tensor
 
-    def fit(self, train_loader, val_loader, num_epochs=10, criterion=None, 
-            optimizer=None, batch_size=16, early_stop_min_increase=0.003, 
+    def fit(self, train_loader, val_loader, num_epochs=10, criterion=None,
+            optimizer=None, batch_size=16, early_stop_min_increase=0.003,
             early_stop_patience=10, lr=0.0001):
         """
         Impliments transfer learning based on new data
@@ -69,8 +72,8 @@ class ResnetModel:
         loss - list - history of loss across epochs
         acc - list - history of accuracy across epochs
         """
-        #TODO: change data loader params to data params then in this function,
-        #Transform those to data loaders so that the batch size can be dynamic
+        # TODO: change data loader params to data params then in this function,
+        # Transform those to data loaders so that the batch size can be dynamic
         start = time.time()
         model = self.model
         best_model_wts = copy.deepcopy(self.model.state_dict())
@@ -142,7 +145,8 @@ class ResnetModel:
 
                 elif phase == 'val' and (epoch_acc - best_acc) < early_stop_min_increase:
                     epochs_no_improve += 1
-                    print(f"Number of epochs without improvement has increased to {epochs_no_improve}")
+                    print(
+                        f"Number of epochs without improvement has increased to {epochs_no_improve}")
 
             if epochs_no_improve >= early_stop_patience:
                 early_stop = True
@@ -151,12 +155,13 @@ class ResnetModel:
 
             print('-' * 60)
             total_time = (time.time() - start) / 60
-            print(f"Training completed. Time taken: {total_time:.3f} min\nBest accuracy: {best_acc:.3f}")
+            print(
+                f"Training completed. Time taken: {total_time:.3f} min\nBest accuracy: {best_acc:.3f}")
             model.load_state_dict(best_model_wts)
             self.model = model
             loss = {'train': train_loss_over_time, 'val': val_loss_over_time}
             acc = {'train': train_acc_over_time, 'val': val_acc_over_time}
-            
+
             return model, loss, acc
 
     def evaluate(self, test_loader, model=None, criterion=None):
@@ -241,12 +246,13 @@ class ResnetModel:
         for pred_prob, pred_idx in zip(probabilites, indices):
             predicted_label = index_to_class_labels[pred_idx].title()
             predicted_prob = pred_prob * 100
-            formatted_predictions.append((predicted_label, f"{predicted_prob:.3f}%"))
+            formatted_predictions.append(
+                (predicted_label, f"{predicted_prob:.3f}%"))
 
         return formatted_predictions
 
-    #change predict proba to actually be in line with sklearn's API and create another function that formats the raw probabilities.
-    #Then go back in to the website, and change the code accordingly.
+    # change predict proba to actually be in line with sklearn's API and create another function that formats the raw probabilities.
+    # Then go back in to the website, and change the code accordingly.
 
     def _setup_resnet(self, num_classes):
         """
@@ -267,10 +273,10 @@ class ResnetModel:
             param.require_grad = False
 
         model.fc = nn.Sequential(nn.Linear(model.fc.in_features, 1024),
-                                nn.ReLU(),
-                                nn.Dropout(0.30),
-                                nn.Linear(1024, num_classes)
-                                )
+                                 nn.ReLU(),
+                                 nn.Dropout(0.30),
+                                 nn.Linear(1024, num_classes)
+                                 )
         model.to(self.device)
         return model
 
@@ -316,11 +322,14 @@ class ResnetModel:
 
         return (train_transform, val_transform, test_transform)
 
+
 if __name__ == '__main__':
-    #tests script to predict on single local image
-    model = Resnet_Model(path_to_pretrained_model='../models/trained_model_resnet50.pt')
+    # tests script to predict on single local image
+    model = Resnet_Model(
+        path_to_pretrained_model='../models/trained_model_resnet50.pt')
     with open('index_to_class_label.json', 'rb') as f:
         j = json.load(f)
     j = {int(k): v for k, v in j.items()}
-    img = Image.open('/Users/josh-mantovani/Downloads/archive/train/AFRICAN CROWNED CRANE/001.jpg')
+    img = Image.open(
+        '/Users/josh-mantovani/Downloads/archive/train/AFRICAN CROWNED CRANE/001.jpg')
     print(model.predict_proba(img, 3, j, show=False))
