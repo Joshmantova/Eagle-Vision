@@ -325,7 +325,7 @@ class ResnetModel:
 
 if __name__ == '__main__':
     # tests script to predict on single local image
-    model = Resnet_Model(
+    model = ResnetModel(
         path_to_pretrained_model='../models/trained_model_resnet50.pt')
     with open('index_to_class_label.json', 'rb') as f:
         j = json.load(f)
