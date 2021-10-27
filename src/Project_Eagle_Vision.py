@@ -11,12 +11,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from resnet_model import Resnet_Model
+from resnet_model import ResnetModel
 
 @st.cache()
 def load_model(path='models/trained_model_resnet50.pt', device='cpu'):
     """Retrieves the trained model and maps it to the CPU by default, can also specify GPU here."""
-    model = Resnet_Model(path_to_pretrained_model=path, map_location=device)
+    model = ResnetModel(path_to_pretrained_model=path, map_location=device)
     return model
 
 @st.cache()

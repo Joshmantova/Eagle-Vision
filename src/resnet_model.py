@@ -9,7 +9,7 @@ from torchvision import (models,
                         transforms)
 import copy
 
-class Resnet_Model:
+class ResnetModel:
 
     def __init__(self, path_to_pretrained_model=None, map_location='cpu', num_classes=250):
         """
