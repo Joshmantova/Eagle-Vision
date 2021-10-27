@@ -185,7 +185,7 @@ class ResnetModel:
         if not criterion:
             criterion = nn.CrossEntropyLoss()
 
-        model = self.model
+        # model = self.model
         model.eval()
         test_loss = 0
         test_acc = 0
@@ -245,9 +245,9 @@ class ResnetModel:
 
         for pred_prob, pred_idx in zip(probabilites, indices):
             predicted_label = index_to_class_labels[pred_idx].title()
-            predicted_prob = pred_prob * 100
+            predicted_perc = pred_prob * 100
             formatted_predictions.append(
-                (predicted_label, f"{predicted_prob:.3f}%"))
+                (predicted_label, f"{predicted_perc:.3f}%"))
 
         return formatted_predictions
 
@@ -321,15 +321,3 @@ class ResnetModel:
         ])
 
         return (train_transform, val_transform, test_transform)
-
-
-if __name__ == '__main__':
-    # tests script to predict on single local image
-    model = ResnetModel(
-        path_to_pretrained_model='../models/trained_model_resnet50.pt')
-    with open('index_to_class_label.json', 'rb') as f:
-        j = json.load(f)
-    j = {int(k): v for k, v in j.items()}
-    img = Image.open(
-        '/Users/josh-mantovani/Downloads/archive/train/AFRICAN CROWNED CRANE/001.jpg')
-    print(model.predict_proba(img, 3, j, show=False))
