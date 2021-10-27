@@ -17,7 +17,8 @@ from resnet_model import ResnetModel
 @st.cache()
 def load_model(path='models/trained_model_resnet50.pt', device='cpu'):
     """Retrieves the trained model and maps it to the CPU by default, can also specify GPU here."""
-    model = ResnetModel(path_to_pretrained_model=path, map_location=device)
+    # TODO: I could make torch detect whether or not there's a GPU instead of explicitly stating it
+    model = ResnetModel(path_to_pretrained_model=path)#, map_location=device)
     return model
 
 
@@ -46,7 +47,7 @@ def load_files_from_s3(keys, bucket_name='bird-classification-bucket'):
 
 
 @st.cache()
-def load_all_image_files(path='src/all_image_files.json'):
+def load_s3_file_structure(path='src/all_image_files.json'):
     """Retrieves JSON document outining the S3 file structure"""
     with open(path, 'r') as f:
         return json.load(f)
@@ -82,7 +83,7 @@ def predict(img, index_to_label_dict, model, k):
 if __name__ == '__main__':
     model = load_model()
     index_to_class_label_dict = load_index_to_label_dict()
-    all_image_files = load_all_image_files()
+    all_image_files = load_s3_file_structure()
     types_of_birds = sorted(list(all_image_files['test'].keys()))
     types_of_birds = [bird.title() for bird in types_of_birds]
 
