@@ -25,8 +25,11 @@ class ResnetModel:
         self.device = torch.device(
             'cuda:0' if torch.cuda.is_available() else 'cpu')
         if path_to_pretrained_model:
+            # self.model = torch.load(
+            #     path_to_pretrained_model, map_location=map_location)
             self.model = torch.load(
-                path_to_pretrained_model, map_location=map_location)
+                path_to_pretrained_model, map_location=self.device
+            )
         else:
             self.model = self._setup_resnet(num_classes=250)
 
