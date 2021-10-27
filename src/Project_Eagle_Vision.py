@@ -100,11 +100,11 @@ if __name__ == '__main__':
         'All Images': 'consolidated', 'Images Used To Train The Model': 'train',
         'Images Used To Tune The Model': 'valid', 'Images The Model Has Never Seen': 'test'
     }
-    types_of_images = list(dtype_file_structure_mapping.keys())
+    data_split_names = list(dtype_file_structure_mapping.keys())
 
-    if file:
+    if file: # if user uploaded file
         img = Image.open(file)
-        prediction = predict(img, index_to_class_label_dict, model, 5)
+        prediction = predict(img, index_to_class_label_dict, model, k=5)
         top_prediction = prediction[0][0]
         available_images = all_image_files.get(
             'train').get(top_prediction.upper())
@@ -117,7 +117,7 @@ if __name__ == '__main__':
 
     else:
         dataset_type = st.sidebar.selectbox(
-            "Data Portion Type", types_of_images)
+            "Data Portion Type", data_split_names)
         image_files_subset = dtype_file_structure_mapping[dataset_type]
 
         selected_species = st.sidebar.selectbox("Bird Type", types_of_birds)
