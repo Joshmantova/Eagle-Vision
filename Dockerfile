@@ -13,4 +13,4 @@ EXPOSE 8501
 
 #Running the streamlit app
 ENTRYPOINT ["streamlit", "run", "--server.maxUploadSize=5"]
-CMD ["src/Project Eagle Vision.py"]
+CMD ["src/Project_Eagle_Vision.py"]
