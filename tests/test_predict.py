@@ -19,6 +19,12 @@ def load_files_from_s3(keys, bucket_name='bird-classification-bucket'):
         s3_files.append(s3_file_image)
     return s3_files
 
+
+def test_s3_connection():
+    s3_files = load_files_from_s3(["train/AFRICAN CROWNED CRANE/001.jpg"])
+    assert s3_files
+
+
 def test_predict():
     model = ResnetModel(
         path_to_pretrained_model='models/trained_model_resnet50.pt')
