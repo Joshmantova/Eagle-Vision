@@ -1,4 +1,4 @@
-![Test Badge](https://github.com/Joshmantova/Eagle-Vision/actions/workflows/python-app.yml/badge.svg)
+![Test Badge](https://github.com/Joshmantova/Eagle-Vision/actions/workflows/python-app.yml/badge.svg) 
 
 # Project Eagle Vision
 Before I go over anything else, here's a link the website hosting the app:
