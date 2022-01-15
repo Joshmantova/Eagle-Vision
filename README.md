@@ -1,3 +1,5 @@
+![example workflow](https://github.com/<OWNER>/<REPOSITORY>/actions/workflows/<WORKFLOW_FILE>/badge.svg)
+
 # Project Eagle Vision
 Before I go over anything else, here's a link the website hosting the app:
 
