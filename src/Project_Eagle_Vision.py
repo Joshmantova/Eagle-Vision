@@ -15,17 +15,22 @@ from resnet_model import ResnetModel
 
 
 @st.cache()
-def load_model(path='models/trained_model_resnet50.pt', device='cpu'):
-    """Retrieves the trained model and maps it to the CPU by default, can also specify GPU here."""
-    # TODO: I could make torch detect whether or not there's a GPU instead of explicitly stating it
-    model = ResnetModel(path_to_pretrained_model=path)#, map_location=device)
+def load_model(path: str = 'models/trained_model_resnet50.pt') -> ResnetModel:
+    """Retrieves the trained model and maps it to the CPU by default,
+    can also specify GPU here."""
+    model = ResnetModel(path_to_pretrained_model=path)
     return model
 
 
 @st.cache()
-def load_index_to_label_dict(path='src/index_to_class_label.json'):
-    """Retrieves and formats the index to class label lookup dictionary needed to 
-    make sense of the predictions. When loaded in, the keys are strings, this also
+def load_index_to_label_dict(
+        path: str = 'src/index_to_class_label.json'
+        ) -> dict:
+    """Retrieves and formats the
+    index to class label
+    lookup dictionary needed to
+    make sense of the predictions.
+    When loaded in, the keys are strings, this also
     processes those keys to integers."""
     with open(path, 'r') as f:
         index_to_class_label_dict = json.load(f)
@@ -34,7 +39,10 @@ def load_index_to_label_dict(path='src/index_to_class_label.json'):
     return index_to_class_label_dict
 
 
-def load_files_from_s3(keys, bucket_name='bird-classification-bucket'):
+def load_files_from_s3(
+        keys: list,
+        bucket_name: str = 'bird-classification-bucket'
+        ) -> list:
     """Retrieves files anonymously from my public S3 bucket"""
     s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
     s3_files = []
@@ -47,14 +55,18 @@ def load_files_from_s3(keys, bucket_name='bird-classification-bucket'):
 
 
 @st.cache()
-def load_s3_file_structure(path='src/all_image_files.json'):
+def load_s3_file_structure(path: str = 'src/all_image_files.json') -> dict:
     """Retrieves JSON document outining the S3 file structure"""
     with open(path, 'r') as f:
         return json.load(f)
 
 
 @st.cache()
-def load_list_of_images_available(all_image_files, image_files_dtype, bird_species):
+def load_list_of_images_available(
+        all_image_files: dict,
+        image_files_dtype: str,
+        bird_species: str
+        ) -> list:
     """Retrieves list of available images given the current selections"""
     species_dict = all_image_files.get(image_files_dtype)
     list_of_files = species_dict.get(bird_species)
@@ -62,7 +74,12 @@ def load_list_of_images_available(all_image_files, image_files_dtype, bird_speci
 
 
 @st.cache()
-def predict(img, index_to_label_dict, model, k):
+def predict(
+        img: Image.Image,
+        index_to_label_dict: dict,
+        model,
+        k: int
+        ) -> list:
     """Transforming input image according to ImageNet paper
     The Resnet was initially trained on ImageNet dataset
     and because of the use of transfer learning, I froze all
@@ -89,20 +106,24 @@ if __name__ == '__main__':
 
     st.title('Welcome To Project Eagle Vision!')
     instructions = """
-        Either upload your own image or select from the sidebar to get a preconfigured image. 
-        The image you select or upload will be fed through the Deep Neural Network in real-time 
+        Either upload your own image or select from
+        the sidebar to get a preconfigured image.
+        The image you select or upload will be fed
+        through the Deep Neural Network in real-time
         and the output will be displayed to the screen.
         """
     st.write(instructions)
 
     file = st.file_uploader('Upload An Image')
     dtype_file_structure_mapping = {
-        'All Images': 'consolidated', 'Images Used To Train The Model': 'train',
-        'Images Used To Tune The Model': 'valid', 'Images The Model Has Never Seen': 'test'
+        'All Images': 'consolidated',
+        'Images Used To Train The Model': 'train',
+        'Images Used To Tune The Model': 'valid',
+        'Images The Model Has Never Seen': 'test'
     }
     data_split_names = list(dtype_file_structure_mapping.keys())
 
-    if file: # if user uploaded file
+    if file:  # if user uploaded file
         img = Image.open(file)
         prediction = predict(img, index_to_class_label_dict, model, k=5)
         top_prediction = prediction[0][0]
@@ -110,6 +131,7 @@ if __name__ == '__main__':
             'train').get(top_prediction.upper())
         examples_of_species = np.random.choice(available_images, size=3)
         files_to_get_from_s3 = []
+
         for im_name in examples_of_species:
             path = os.path.join('train', top_prediction.upper(), im_name)
             files_to_get_from_s3.append(path)
@@ -132,6 +154,7 @@ if __name__ == '__main__':
             s3_key_prefix, selected_species.upper(), image_name)
         files_to_get_from_s3 = [key_path]
         examples_of_species = np.random.choice(available_images, size=3)
+
         for im in examples_of_species:
             path = os.path.join(s3_key_prefix, selected_species.upper(), im)
             files_to_get_from_s3.append(path)
@@ -146,6 +169,7 @@ if __name__ == '__main__':
     df = pd.DataFrame(data=np.zeros((5, 2)),
                       columns=['Species', 'Confidence Level'],
                       index=np.linspace(1, 5, 5, dtype=int))
+
     for idx, p in enumerate(prediction):
         link = 'https://en.wikipedia.org/wiki/' + \
             p[0].lower().replace(' ', '_')
