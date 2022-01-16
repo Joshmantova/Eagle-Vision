@@ -240,6 +240,7 @@ class ResnetModel:
         print(f"Test loss: {test_loss:.4f}\nTest acc: {test_acc:.4f}")
 
         return preds, labels_list
+
     def predict_proba(
             self,
             img: PIL.Image.Image,
