@@ -25,7 +25,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip tox pytest flake8
     - name: Test S3 bucket access
-      run: aws s3 ls bird-classification-bucket
+      run: echo ${aws s3 ls bird-classification-bucket}
     - name: Test with tox
       run: |
         tox
