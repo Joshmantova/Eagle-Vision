@@ -43,7 +43,7 @@ def load_files_from_s3(
         keys: list,
         bucket_name: str = 'bird-classification-bucket'
         ) -> list:
-    """Retrieves files anonymously from my public S3 bucket"""
+    """Retrieves files from S3 bucket"""
     s3 = boto3.client('s3')
     s3_files = []
     for key in keys:
