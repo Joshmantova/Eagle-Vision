@@ -2,10 +2,6 @@
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
 name: Tox Unit Tests
-env:
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
-
 on:
   push:
     branches: [ prod ]
@@ -14,11 +10,7 @@ on:
 
 jobs:
   build:
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
@@ -30,7 +22,7 @@ jobs:
         python -m pip install --upgrade pip tox pytest flake8
     - name: Test with tox
       run: |
-        tox
+        AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY_ID }} tox
     - name: Lint with Flake8
       run: |
         flake8
