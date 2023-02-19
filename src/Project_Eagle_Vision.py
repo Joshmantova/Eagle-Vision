@@ -44,7 +44,7 @@ def load_files_from_s3(
         bucket_name: str = 'bird-classification-bucket'
         ) -> list:
     """Retrieves files anonymously from my public S3 bucket"""
-    s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
+    s3 = boto3.client('s3')
     s3_files = []
     for key in keys:
         s3_file_raw = s3.get_object(Bucket=bucket_name, Key=key)
